@@ -1,2 +1,56 @@
-# 114514
-うん
+local Player = game.Players.LocalPlayer
+local Mouse = Player:GetMouse()
+local ScreenGui = Instance.new("ScreenGui", Player:WaitForChild("PlayerGui"))
+ScreenGui.Name = "CopyToolGui"
+-- カーソル（ドラッグ移動可能）
+local Cursor = Instance.new("Frame")
+Cursor.Size = UDim2.new(0, 20, 0, 20)
+Cursor.Position = UDim2.new(0.5, -10, 0.5, -10)
+Cursor.BackgroundColor3 = Color3.new(1, 0, 0)
+Cursor.BorderSizePixel = 0
+Cursor.Name = "DraggableCursor"
+Cursor.Parent = ScreenGui
+Cursor.Active = true
+Cursor.Draggable = true
+-- コピーボタン（左下に配置）
+local CopyButton = Instance.new("TextButton")
+CopyButton.Size = UDim2.new(0, 100, 0, 40)
+CopyButton.Position = UDim2.new(0, 10, 1, -50)
+CopyButton.Text = "コピー"
+CopyButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+CopyButton.TextColor3 = Color3.new(1,1,1)
+CopyButton.Parent = ScreenGui
+-- ハイライト用の赤枠
+local SelectionBox = Instance.new("SelectionBox")
+SelectionBox.Color3 = Color3.new(1, 0, 0)
+SelectionBox.LineThickness = 0.05
+SelectionBox.Parent = ScreenGui
+-- ターゲット検出
+local target = nil
+game:GetService("RunService").RenderStepped:Connect(function()
+local screenPos = Cursor.AbsolutePosition + Cursor.AbsoluteSize / 2
+local unitRay = workspace.CurrentCamera:ScreenPointToRay(screenPos.X, screenPos.Y)
+local raycastParams = RaycastParams.new()
+raycastParams.FilterDescendantsInstances = {Player.Character}
+raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+local result = workspace:Raycast(unitRay.Origin, unitRay.Direction * 100, raycastParams)
+if result and result.Instance then
+target = result.Instance
+SelectionBox.Adornee = target
+else
+target = nil
+SelectionBox.Adornee = nil
+end
+end)
+-- コピー処理
+CopyButton.MouseButton1Click:Connect(function()
+if target then
+local copy = target:Clone()
+copy.Parent = workspace
+if copy:IsA("BasePart") then
+copy.CFrame = target.CFrame * CFrame.new(2, 2, 0)
+elseif copy:FindFirstChild("PrimaryPart") then
+copy:SetPrimaryPartCFrame(target:GetPrimaryPartCFrame() * CFrame.new(2, 2, 0))
+end
+end
+end)
